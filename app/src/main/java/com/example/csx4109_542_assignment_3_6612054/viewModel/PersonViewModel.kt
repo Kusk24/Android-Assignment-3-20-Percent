@@ -16,6 +16,8 @@ import com.example.csx4109_542_assignment_3_6612054.model.Person
 import com.example.csx4109_542_assignment_3_6612054.model.PersonEntity
 import com.example.csx4109_542_assignment_3_6612054.model.ResultWrapper
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.csx4109_542_assignment_3_6612054.repository.ImageRepository
+import com.example.csx4109_542_assignment_3_6612054.repository.PersonEntityRepository
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.coroutines.Dispatchers
@@ -32,128 +34,76 @@ private val Context.dataStore by preferencesDataStore(name = "image_store")
 
 class PersonViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val context = application
-    private val database = Room.databaseBuilder(context,
-        PersonEntityDatabase::class.java,
-        "personEntity_database").fallbackToDestructiveMigration()
-        .build()
+    private val personRepository = PersonEntityRepository(application)
+    private val imageRepository = ImageRepository(application)
 
-    private val personEntityDao = database.PersonEntityDao()
-
-    val personEntityList = personEntityDao.getPersonEntity()
+    val personEntityList = personRepository.personEntityList
 
     private val _personList = MutableStateFlow<List<Person>>(emptyList())
     val personList: StateFlow<List<Person>> = _personList
 
-    init{
+    private val _imageList = MutableStateFlow<List<String>>(emptyList())
+    val imageList: StateFlow<List<String>> = _imageList
+
+    init {
         loadPerson()
         loadSavedImages()
     }
 
     fun loadPerson() {
-        val url : String = "https://randomuser.me/api"
-
+        val url = "https://randomuser.me/api"
         viewModelScope.launch {
             val data = httpClient.get(url).body<ResultWrapper>()
             val person = data.results.first()
 
             _personList.value += person
 
-            insertPersonEntity(person)
+            savePerson(person)
         }
     }
 
-    fun savePerson(personEntity: PersonEntity){
+    fun savePerson(person: Person) {
         viewModelScope.launch {
-
             withContext(Dispatchers.IO) {
-                personEntityDao.insertPersonEntity(personEntity)
+                personRepository.insertPerson(person)
             }
         }
     }
 
-    fun deletePerson(personEntity : PersonEntity){
+    fun deletePerson(person: Person) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                personEntityDao.deletePersonEntity(personEntity)
+                personRepository.deletePerson(person)
             }
         }
-
     }
 
-    private suspend fun insertPersonEntity(person : Person) {
-        val personEntity = PersonEntity(
-            title = person.name.title,
-            first = person.name.first,
-            last = person.name.last,
-            large = person.picture.large,
-            medium = person.picture.medium,
-            thumbnail = person.picture.thumbnail
-        )
-        withContext(Dispatchers.IO) {
-        personEntityDao.insertPersonEntity(personEntity)
+    fun deletePersonEntity(personEntity: PersonEntity) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                personRepository.deletePersonEntity(personEntity)
+            }
         }
     }
-
-    private suspend fun deletePersonEntity(person : Person){
-        val personEntity = PersonEntity(
-            title = person.name.title,
-            first = person.name.first,
-            last = person.name.last,
-            large = person.picture.large,
-            medium = person.picture.medium,
-            thumbnail = person.picture.thumbnail
-        )
-        withContext(Dispatchers.IO) {
-            personEntityDao.deletePersonEntity(personEntity)
-        }
-    }
-
-    companion object {
-        val IMAGE_LIST_KEY = stringPreferencesKey("image_list")
-    }
-
-    private val _imageList = MutableStateFlow<List<String>>(emptyList())
-    val imageList: StateFlow<List<String>> = _imageList
 
     fun saveImage(imageUri: String) {
         viewModelScope.launch {
-            context.dataStore.edit { preferences ->
-                val currentList = preferences[IMAGE_LIST_KEY]?.split(",")?.filter { it.isNotBlank() }?.toMutableList() ?: mutableListOf()
-
-                if (!currentList.contains(imageUri)) { // Avoid duplicates
-                    currentList.add(imageUri)
-                    preferences[IMAGE_LIST_KEY] = currentList.joinToString(",")
-                }
-
-                // Update StateFlow to notify UI
-                _imageList.value = currentList
-            }
+            imageRepository.saveImage(imageUri)
+            loadSavedImages()
         }
     }
 
     fun deleteImage(imageUri: String) {
         viewModelScope.launch {
-            context.dataStore.edit { preferences ->
-                val currentList = preferences[IMAGE_LIST_KEY]?.split(",")?.filter { it.isNotBlank() }?.toMutableList() ?: mutableListOf()
-
-                if (currentList.contains(imageUri)) {
-                    currentList.remove(imageUri)
-                    preferences[IMAGE_LIST_KEY] = currentList.joinToString(",")
-                }
-
-                // Update StateFlow to notify UI
-                _imageList.value = currentList
-            }
+            imageRepository.deleteImage(imageUri)
+            loadSavedImages()
         }
     }
 
     fun loadSavedImages() {
         viewModelScope.launch {
-            val savedImages = context.dataStore.data.map { preferences ->
-                preferences[IMAGE_LIST_KEY]?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
-            }.first()
-
+            val savedImages = imageRepository.loadSavedImages()
             _imageList.value = savedImages
         }
-}}
+    }
+}

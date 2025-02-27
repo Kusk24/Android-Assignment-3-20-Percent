@@ -30,15 +30,16 @@ fun MainAppScreen(modifier : Modifier){
         startDestination = "PersonList"
         ){
 
-
         composable("PersonList"){
             PersonListScreen(
                 modifier, personEntityList.value.orEmpty(),
                 loadPersonClicked = {personViewModel.loadPerson()},
                 viewGalleryClicked = { navController.navigate("Gallery")},
                 saveClicked = {personViewModel.saveImage(it)},
-                deleteClicked = {personViewModel.deleteImage(it)}
-            )}
+                personEntityDelete = {personViewModel.deletePersonEntity(it)},
+                imageDelete = {personViewModel.deleteImage(it)}
+            )
+        }
 
         composable("Gallery") {
             GalleryScreen(

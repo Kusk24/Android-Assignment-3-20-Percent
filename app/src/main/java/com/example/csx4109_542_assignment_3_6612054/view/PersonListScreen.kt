@@ -3,18 +3,16 @@ package com.example.csx4109_542_assignment_3_6612054.view
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -49,7 +47,8 @@ import com.example.csx4109_542_assignment_3_6612054.viewModel.PersonViewModel
 fun PersonListScreen(modifier : Modifier, personEntityList: List<PersonEntity>,
                      loadPersonClicked : () -> Unit,
                      viewGalleryClicked : () -> Unit,
-                     deleteClicked : (image : String) -> Unit,
+                     personEntityDelete : (personEntity : PersonEntity) -> Unit,
+                     imageDelete : (image : String) -> Unit,
                      saveClicked : (image : String) -> Unit ) {
 
     val groupedNames = personEntityList.groupBy{ it.first.first() }.toSortedMap()
@@ -58,7 +57,7 @@ fun PersonListScreen(modifier : Modifier, personEntityList: List<PersonEntity>,
         LazyColumn(modifier = modifier.weight(1f)) {
             groupedNames.forEach { groupedName ->
                 stickyHeader {
-                    Surface(modifier = Modifier.padding(top = 16.dp)) {
+                    Surface(modifier = Modifier.fillMaxSize()) {
                         Text("Alplabet: ${groupedName.key}",
                             fontWeight = FontWeight.Bold,
                             fontSize = 24.sp,
@@ -93,7 +92,8 @@ fun PersonListScreen(modifier : Modifier, personEntityList: List<PersonEntity>,
                             }
 
                             Button(onClick = {
-                                deleteClicked(item.large)
+                                personEntityDelete(item)
+                                imageDelete(item.large)
                             }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red,
                                 contentColor = Color.White),
                                 modifier = Modifier.fillMaxWidth().wrapContentWidth(Alignment.End)
