@@ -37,10 +37,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.csx4109_542_assignment_3_6612054.model.Person
 import com.example.csx4109_542_assignment_3_6612054.model.PersonEntity
-import com.example.csx4109_542_assignment_3_6612054.viewModel.PersonViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -67,11 +64,11 @@ fun PersonListScreen(modifier : Modifier, personEntityList: List<PersonEntity>,
                 }
                 items(groupedName.value) { item ->
 
-                    var offsetX = remember(item) { mutableStateOf(0f) }
+                    var offsetX = remember { mutableStateOf(0f) }
                     val leftThreshold = -50f  // Threshold to snap left
                     val rightThreshold = 50f  // Threshold to snap right
-                    val maxLeftSwipe = -120f  // Maximum left swipe (reveal Delete)
-                    val maxRightSwipe = 120f  // Maximum right swipe (reveal Save)
+                    val maxLeftSwipe = -100f  // Maximum left swipe (reveal Delete)
+                    val maxRightSwipe = 100f  // Maximum right swipe (reveal Save)
 
                     Box(modifier = Modifier
                         .fillMaxWidth()
@@ -84,6 +81,7 @@ fun PersonListScreen(modifier : Modifier, personEntityList: List<PersonEntity>,
                             .background(Color.LightGray)){
                             Button(onClick = {
                                 saveClicked(item.large)
+                                offsetX.value = 0f
                             }, colors = ButtonDefaults.buttonColors(containerColor = Color.Green,
                                 contentColor = Color.Black),
                                 modifier = Modifier.fillMaxWidth().wrapContentWidth(Alignment.Start)
@@ -94,6 +92,7 @@ fun PersonListScreen(modifier : Modifier, personEntityList: List<PersonEntity>,
                             Button(onClick = {
                                 personEntityDelete(item)
                                 imageDelete(item.large)
+                                offsetX.value = 0f
                             }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red,
                                 contentColor = Color.White),
                                 modifier = Modifier.fillMaxWidth().wrapContentWidth(Alignment.End)
