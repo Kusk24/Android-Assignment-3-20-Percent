@@ -46,7 +46,6 @@ class PersonViewModel(application: Application) : AndroidViewModel(application) 
     val imageList: StateFlow<List<String>> = _imageList
 
     init {
-        loadPerson()
         loadSavedImages()
     }
 
